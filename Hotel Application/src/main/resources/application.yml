@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: hotelDemo
+  datasource:
+    url: jdbc:mysql://localhost:3306/hotel
+    username: root
+    password: Tlin$04@2002
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: hotelDemoApplication
+            client-secret: zpoQHDl618QhOiVx9sDaEjFXkz3V1R9n
+            scope: openid+profile+email
+            authorization-grant-type: authorization_code
+        provider:
+          keycloak:
+            issuer-uri: https://lemur-7.cloud-iam.com/auth/realms/key-cloak-hotel-demo
+
+server:
+  port: 8082
+  
+
+  
