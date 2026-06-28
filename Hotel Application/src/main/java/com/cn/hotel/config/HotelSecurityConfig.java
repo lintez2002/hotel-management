@@ -1,5 +1,6 @@
 package com.cn.hotel.config;
 
+import com.nimbusds.jose.shaded.gson.internal.LinkedTreeMap;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -11,12 +12,10 @@ import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMap
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtDecoders;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -37,8 +36,33 @@ public class HotelSecurityConfig {
 			.oauth2Login(oauth2 -> oauth2
 					.loginPage("/login")
 					.defaultSuccessUrl("/hotel/getAll")
+			)
+			.oauth2ResourceServer(oauth2 -> oauth2
+						.jwt(jwt -> jwt
+								.jwtAuthenticationConverter(jwtAuthenticationConverter())
+						        )
 			);
 		return http.build();
+	}
+
+	public JwtAuthenticationConverter jwtAuthenticationConverter() {
+		JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+		converter.setJwtGrantedAuthoritiesConverter(jwt ->{
+			Collection<GrantedAuthority> authorities = new ArrayList<>();
+
+			//Extract roles from realm_access
+			Map<String, Object> claimsMap = jwt.getClaims();
+			Object realmAccess = claimsMap.get("realm_access");
+			if(realmAccess != null) {
+				LinkedTreeMap<String, List<String>> roleMap = (LinkedTreeMap<String, List<String>>) realmAccess;
+				List<String> roles = new ArrayList<>(roleMap.get("roles"));
+				authorities.addAll(roles.stream()
+						.map(SimpleGrantedAuthority::new)
+						.collect(Collectors.toList()));
+			}
+			return authorities;
+		});
+		return converter;
 	}
 
 	@Bean
